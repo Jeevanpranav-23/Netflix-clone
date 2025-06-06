@@ -57,6 +57,10 @@ body {
   animation: fadeIn 0.6s ease-out;
 }
 
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
 /* Custom hover effects */
 .movie-card-hover {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
