@@ -201,12 +201,17 @@ export const Hero = ({ featuredMovie, onPlay, onMoreInfo }) => {
   );
 };
 
-// Movie Card Component
+// Movie Card Component with optimized loading
 export const MovieCard = ({ movie, onPlay, onAddToList }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  
   const posterUrl = movie.poster_path 
-    ? `${TMDB_IMAGE_BASE_URL}/w500${movie.poster_path}`
-    : 'https://via.placeholder.com/500x750/333/fff?text=No+Image';
+    ? `${TMDB_IMAGE_BASE_URL}/w342${movie.poster_path}`
+    : null;
+    
+  const fallbackUrl = 'https://images.unsplash.com/photo-1489599843714-2e4aafb21fee?w=342&h=513&q=80&fit=crop';
 
   return (
     <div 
@@ -214,14 +219,45 @@ export const MovieCard = ({ movie, onPlay, onAddToList }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <img 
-        src={posterUrl}
-        alt={movie.title || movie.name}
-        className="w-full h-72 lg:h-96 object-cover rounded-lg"
-      />
+      {/* Image with loading state */}
+      <div className="relative w-full h-72 lg:h-96 bg-gray-800 rounded-lg overflow-hidden">
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900 animate-pulse rounded-lg"></div>
+        )}
+        
+        {posterUrl && !imageError ? (
+          <img 
+            src={posterUrl}
+            alt={movie.title || movie.name}
+            className={`w-full h-full object-cover rounded-lg transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => {
+              setImageError(true);
+              setImageLoaded(true);
+            }}
+            loading="lazy"
+          />
+        ) : (
+          <img 
+            src={fallbackUrl}
+            alt={movie.title || movie.name}
+            className="w-full h-full object-cover rounded-lg"
+            onLoad={() => setImageLoaded(true)}
+          />
+        )}
+        
+        {/* Title overlay for fallback */}
+        {(!posterUrl || imageError) && (
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <h3 className="text-white text-center font-semibold">
+              {movie.title || movie.name}
+            </h3>
+          </div>
+        )}
+      </div>
       
       {/* Overlay on Hover */}
-      {isHovered && (
+      {isHovered && imageLoaded && (
         <div className="absolute inset-0 bg-black bg-opacity-80 rounded-lg flex flex-col justify-end p-4 transition-opacity duration-300">
           <h3 className="text-white font-semibold text-lg mb-2">
             {movie.title || movie.name}
@@ -229,10 +265,10 @@ export const MovieCard = ({ movie, onPlay, onAddToList }) => {
           
           <div className="flex items-center space-x-2 mb-3">
             <span className="text-green-400 text-sm">
-              {Math.round(movie.vote_average * 10)}% Match
+              {Math.round((movie.vote_average || 7) * 10)}% Match
             </span>
             <span className="text-white text-sm">
-              {movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}
+              {movie.release_date ? new Date(movie.release_date).getFullYear() : movie.first_air_date ? new Date(movie.first_air_date).getFullYear() : '2024'}
             </span>
           </div>
 
