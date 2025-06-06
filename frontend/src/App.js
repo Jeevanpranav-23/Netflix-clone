@@ -152,8 +152,23 @@ const NetflixClone = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-2xl">Loading Netflix...</div>
+      <div className="min-h-screen bg-black">
+        {/* Header */}
+        <Header 
+          onSearch={() => {}}
+          onProfileClick={() => {}}
+        />
+        
+        {/* Loading Hero */}
+        <div className="relative h-screen bg-gradient-to-r from-red-900 to-black flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl font-bold text-red-600 mb-4 animate-pulse">NETFLIX</div>
+            <div className="text-white text-xl">Loading amazing content...</div>
+            <div className="mt-4">
+              <div className="w-16 h-1 bg-red-600 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
