@@ -303,7 +303,7 @@ export const MovieCard = ({ movie, onPlay, onAddToList }) => {
   );
 };
 
-// Content Row Component
+// Content Row Component with skeleton loading
 export const ContentRow = ({ title, movies, onPlay, onAddToList }) => {
   const scrollRef = useRef(null);
 
@@ -316,15 +316,6 @@ export const ContentRow = ({ title, movies, onPlay, onAddToList }) => {
       });
     }
   };
-
-  if (!movies || movies.length === 0) {
-    return (
-      <div className="px-4 lg:px-16 py-8">
-        <h2 className="text-white text-2xl font-semibold mb-4">{title}</h2>
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="px-4 lg:px-16 py-8">
@@ -345,23 +336,34 @@ export const ContentRow = ({ title, movies, onPlay, onAddToList }) => {
           className="flex space-x-4 overflow-x-auto scrollbar-hide scroll-smooth"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {movies.map((movie) => (
-            <MovieCard 
-              key={movie.id}
-              movie={movie}
-              onPlay={onPlay}
-              onAddToList={onAddToList}
-            />
-          ))}
+          {!movies || movies.length === 0 ? (
+            // Skeleton loading
+            Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="flex-shrink-0 w-48 lg:w-64">
+                <div className="w-full h-72 lg:h-96 bg-gray-800 rounded-lg animate-pulse"></div>
+              </div>
+            ))
+          ) : (
+            movies.map((movie) => (
+              <MovieCard 
+                key={movie.id}
+                movie={movie}
+                onPlay={onPlay}
+                onAddToList={onAddToList}
+              />
+            ))
+          )}
         </div>
 
         {/* Right Scroll Button */}
-        <button 
-          onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-70"
-        >
-          ▶
-        </button>
+        {movies && movies.length > 0 && (
+          <button 
+            onClick={() => scroll('right')}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-70"
+          >
+            ▶
+          </button>
+        )}
       </div>
     </div>
   );
