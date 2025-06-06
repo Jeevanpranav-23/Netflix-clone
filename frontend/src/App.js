@@ -40,55 +40,66 @@ const NetflixClone = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all movie data on component mount
+  // Fetch all movie data on component mount with optimization
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        // Fetch featured movie (trending)
+        // Fetch priority content first (featured movie and trending)
         const trending = await fetchFromTMDB('/trending/movie/week');
         if (trending && trending.results && trending.results.length > 0) {
           setFeaturedMovie(trending.results[0]);
-          setTrendingMovies(trending.results);
+          setTrendingMovies(trending.results.slice(0, 10)); // Limit to 10 items
+          setLoading(false); // Allow initial render
         }
 
-        // Fetch popular movies
-        const popular = await fetchFromTMDB('/movie/popular');
+        // Fetch remaining content in parallel but with smaller sets
+        const [popular, topRated, tvPopular] = await Promise.all([
+          fetchFromTMDB('/movie/popular'),
+          fetchFromTMDB('/movie/top_rated'),
+          fetchFromTMDB('/tv/popular')
+        ]);
+
         if (popular && popular.results) {
-          setPopularMovies(popular.results);
+          setPopularMovies(popular.results.slice(0, 10));
         }
-
-        // Fetch top rated movies
-        const topRated = await fetchFromTMDB('/movie/top_rated');
         if (topRated && topRated.results) {
-          setTopRatedMovies(topRated.results);
+          setTopRatedMovies(topRated.results.slice(0, 10));
         }
-
-        // Fetch TV shows
-        const tvPopular = await fetchFromTMDB('/tv/popular');
         if (tvPopular && tvPopular.results) {
-          setTvShows(tvPopular.results);
+          setTvShows(tvPopular.results.slice(0, 10));
         }
 
-        // Fetch movies by genre
-        const actionGenre = await fetchFromTMDB('/discover/movie?with_genres=28');
-        if (actionGenre && actionGenre.results) {
-          setActionMovies(actionGenre.results);
-        }
+        // Fetch genre movies with delay to not overwhelm API
+        setTimeout(async () => {
+          const [actionGenre, comedyGenre, horrorGenre] = await Promise.all([
+            fetchFromTMDB('/discover/movie?with_genres=28'),
+            fetchFromTMDB('/discover/movie?with_genres=35'),
+            fetchFromTMDB('/discover/movie?with_genres=27')
+          ]);
 
-        const comedyGenre = await fetchFromTMDB('/discover/movie?with_genres=35');
-        if (comedyGenre && comedyGenre.results) {
-          setComedyMovies(comedyGenre.results);
-        }
-
-        const horrorGenre = await fetchFromTMDB('/discover/movie?with_genres=27');
-        if (horrorGenre && horrorGenre.results) {
-          setHorrorMovies(horrorGenre.results);
-        }
+          if (actionGenre && actionGenre.results) {
+            setActionMovies(actionGenre.results.slice(0, 10));
+          }
+          if (comedyGenre && comedyGenre.results) {
+            setComedyMovies(comedyGenre.results.slice(0, 10));
+          }
+          if (horrorGenre && horrorGenre.results) {
+            setHorrorMovies(horrorGenre.results.slice(0, 10));
+          }
+        }, 1000);
 
       } catch (error) {
         console.error('Error fetching data:', error);
-      } finally {
+        // Fallback to mock data if API fails
+        setFeaturedMovie({
+          id: 1,
+          title: "Netflix Original",
+          overview: "Welcome to Netflix! Discover thousands of movies and TV shows.",
+          backdrop_path: null,
+          vote_average: 8.5,
+          release_date: "2024"
+        });
         setLoading(false);
       }
     };
