@@ -120,25 +120,39 @@ export const Header = ({ onSearch, onProfileClick }) => {
   );
 };
 
-// Hero Section Component
+// Hero Section Component with loading optimization
 export const Hero = ({ featuredMovie, onPlay, onMoreInfo }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   if (!featuredMovie) {
     return (
-      <div className="relative h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="relative h-screen bg-gradient-to-r from-red-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl font-bold text-white mb-4">NETFLIX</div>
+          <div className="text-white text-xl animate-pulse">Loading amazing content...</div>
+        </div>
       </div>
     );
   }
 
-  const backdropUrl = `${TMDB_IMAGE_BASE_URL}/original${featuredMovie.backdrop_path}`;
+  const backdropUrl = featuredMovie.backdrop_path 
+    ? `${TMDB_IMAGE_BASE_URL}/w1280${featuredMovie.backdrop_path}`
+    : 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=1280&q=80';
 
   return (
     <div className="relative h-screen overflow-hidden">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${backdropUrl})` }}
-      >
+      {/* Background Image with loading */}
+      <div className="absolute inset-0">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-r from-red-900 to-black animate-pulse"></div>
+        )}
+        <img 
+          src={backdropUrl}
+          alt={featuredMovie.title || featuredMovie.name}
+          className={`w-full h-full object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageLoaded(true)}
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
       </div>
@@ -146,16 +160,16 @@ export const Hero = ({ featuredMovie, onPlay, onMoreInfo }) => {
       {/* Content */}
       <div className="relative z-10 h-full flex items-center px-4 lg:px-16">
         <div className="max-w-lg">
-          <h1 className="text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-            {featuredMovie.title || featuredMovie.name}
+          <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight animate-fade-in">
+            {featuredMovie.title || featuredMovie.name || "Netflix Original"}
           </h1>
           
-          <p className="text-lg lg:text-xl text-white mb-6 leading-relaxed">
-            {featuredMovie.overview}
+          <p className="text-lg lg:text-xl text-white mb-6 leading-relaxed animate-fade-in">
+            {featuredMovie.overview || "Discover thousands of movies and TV shows."}
           </p>
 
           {/* Action Buttons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 animate-fade-in">
             <button 
               onClick={() => onPlay(featuredMovie)}
               className="flex items-center space-x-2 bg-white text-black px-8 py-3 rounded font-semibold hover:bg-gray-200 transition-colors duration-200"
@@ -174,11 +188,11 @@ export const Hero = ({ featuredMovie, onPlay, onMoreInfo }) => {
           </div>
 
           {/* Movie Info */}
-          <div className="flex items-center space-x-4 mt-6 text-white">
+          <div className="flex items-center space-x-4 mt-6 text-white animate-fade-in">
             <span className="text-green-400 font-semibold">
-              {Math.round(featuredMovie.vote_average * 10)}% Match
+              {Math.round((featuredMovie.vote_average || 8.5) * 10)}% Match
             </span>
-            <span>{featuredMovie.release_date ? new Date(featuredMovie.release_date).getFullYear() : 'N/A'}</span>
+            <span>{featuredMovie.release_date ? new Date(featuredMovie.release_date).getFullYear() : '2024'}</span>
             <span className="border border-gray-400 px-1 text-sm">HD</span>
           </div>
         </div>
