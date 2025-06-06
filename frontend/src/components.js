@@ -1,14 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-// TMDB API Configuration
+// TMDB API Configuration with fallback
 const TMDB_API_KEY = 'c8dea14dc917687ac631a52620e4f7ad';
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
-// Utility function to fetch data from TMDB
+// Utility function to fetch data from TMDB with timeout
 const fetchFromTMDB = async (endpoint) => {
   try {
-    const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
     if (!response.ok) throw new Error('API request failed');
     return await response.json();
   } catch (error) {
